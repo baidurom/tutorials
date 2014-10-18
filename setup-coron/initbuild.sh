@@ -59,8 +59,7 @@ addadbrules(){
 	sudo adb kill-server
 	sudo adb devices
 	echo "\n配置环境完成"
-	echo -e "按回车键继续"
-	read anykey
+	read -p "按回车键继续..."
 }
 
 changecoronlanguage(){
@@ -75,15 +74,13 @@ case $languagechoose in
 		cd $coronDir
 		patch -p1<$thisDir/coron.patch
 		cd $thisDir
-		echo -e "按回车键继续"
-		read anykey
+		read -p "按回车键继续..."
 	;;
 	2)
 		cd $coronDir
 		patch -R -p1<$thisDir/coron.patch
 		cd $thisDir
-		echo -e "按回车键继续"
-		read anykey
+		read -p "按回车键继续..."
 	;;
 	*)
 		main
@@ -102,13 +99,11 @@ zipcenop(){
 case $cenopmode in
 	1)
 		java -jar $thisDir/ZipCenOp.jar e ${cenopfile//\'//}
-	echo -e "按回车键继续"
-	read anykey
+		read -p "按回车键继续..."
 	;;
 	2)
 		java -jar $thisDir/ZipCenOp.jar r ${cenopfile//\'//}
-	echo -e "按回车键继续"
-	read anykey
+		read -p "按回车键继续..."
 	;;
 	*)
 		main
@@ -133,8 +128,7 @@ repoSource(){
 	repo init -u https://github.com/baidurom/manifest.git -b "coron-"$($version)
 	repo sync
 	cd $thisDir
-	echo -e "按回车键继续"
-	read anykey
+	read -p "按回车键继续..."
 }
 
 fastrepoSource(){
@@ -154,8 +148,51 @@ fastrepoSource(){
 	repo init --repo-url git://github.com/baidurom/repo.git -u https://github.com/baidurom/manifest.git -b "coron-"$($version) --no-repo-verify
 	repo sync -c --no-clone-bundle --no-tags -j4
 	cd $thisDir
-	echo -e "按回车键继续"
-	read anykey
+	read -p "按回车键继续..."
+}
+
+installsdk(){
+echo
+echo "下载和配置 Android SDK!!"
+echo "请确保 unzip 已经安装"
+echo
+sudo apt-get install unzip -y
+if [ `getconf LONG_BIT` = "64" ];then
+	echo
+	echo "正在下载 Linux 64位 系统的Android SDK"
+	wget http://dl.google.com/android/adt/adt-bundle-linux-x86_64-20140702.zip
+	echo "下载完成!!"
+	echo "展开文件"
+	mkdir ~/adt-bundle
+	mv adt-bundle-linux-x86_64-20140702.zip ~/adt-bundle/adt_x64.zip
+	cd ~/adt-bundle
+	unzip adt_x64.zip
+	mv -f adt-bundle-linux-x86_64-20140702/* .
+	echo "正在配置"
+	echo -e '\n# Android tools\nexport PATH=${PATH}:~/adt-bundle/sdk/tools\nexport PATH=${PATH}:~/adt-bundle/sdk/platform-tools\nexport PATH=${PATH}:~/bin' >> ~/.bashrc
+	echo -e '\nPATH="$HOME/adt-bundle/sdk/tools:$HOME/adt-bundle/sdk/platform-tools:$PATH"' >> ~/.profile
+	echo "完成!!"
+else
+	echo
+	echo "正在下载 Linux 32位 系统的Android SDK"
+	wget http://dl.google.com/android/adt/adt-bundle-linux-x86-20140702.zip
+	echo "下载完成!!"
+	echo "展开文件"
+	mkdir ~/adt-bundle
+	mv adt-bundle-linux-x86-20140702.zip ~/adt-bundle/adt_x86.zip
+	cd ~/adt-bundle
+	unzip adt_x86.zip
+	mv -f adt-bundle-linux-x86_64-20140702/* .
+	echo "正在配置"
+	echo -e '\n# Android tools\nexport PATH=${PATH}:~/adt-bundle/sdk/tools\nexport PATH=${PATH}:~/adt-bundle/sdk/platform-tools\nexport PATH=${PATH}:~/bin' >> ~/.bashrc
+	echo -e '\nPATH="$HOME/adt-bundle/sdk/tools:$HOME/adt-bundle/sdk/platform-tools:$PATH"' >> ~/.profile
+	echo "完成!!"
+fi
+rm -Rf ~/adt-bundle/adt-bundle-linux-x86_64-20140702
+rm -Rf ~/adt-bundle/adt-bundle-linux-x86-20140702
+rm -f ~/adt-bundle/adt_x64.zip
+rm -f ~/adt-bundle/adt_x86.zip
+read -p "按回车键继续..."
 }
 
 initSystemConfigure(){
@@ -165,9 +202,10 @@ echo -e "\t1.ia32运行库"
 echo -e "\t2.JavaSE(Oracle Java JDK)"
 echo -e "\t3.aosp&cm&recovery编译环境"
 echo -e "\t4.adb运行环境"
-echo -e "\t5.coron项目中文环境"
-echo -e "\t6.hosts环境"
-echo -e "\t7.安卓开发必备环境(上面1234）"
+echo -e "\t5.AndroidSDK运行环境"
+echo -e "\t6.coron项目中文环境"
+echo -e "\t7.hosts环境"
+echo -e "\t8.安卓开发必备环境(上面12345）"
 echo -ne "\n选择:"
 read configurechoose
 case $configurechoose in
@@ -191,8 +229,7 @@ case $configurechoose in
 		sudo apt-get update #再次更新下源
 #end
 		fi
-		echo -e "按回车键继续"
-		read anykey
+		read -p "按回车键继续..."
 	;;
 	2)
 		sudo apt-get update
@@ -203,8 +240,7 @@ case $configurechoose in
 		sleep 1
 		sudo add-apt-repository ppa:webupd8team/java
 		sudo apt-get update && sudo apt-get install oracle-java7-installer 
-		echo -e "按回车键继续"
-		read anykey
+		read -p "按回车键继续..."
 	;;
 	3)
 		echo -e "\n开始安装ROM编译环境..."
@@ -217,7 +253,8 @@ case $configurechoose in
 		if [ "$kind" == "1" ]; then
 			sudo apt-get install bison libc6 build-essential curl flex g++-multilib g++ gcc-multilib git-core gnupg gperf libesd0-dev libncurses5-dev libwxgtk2.8-dev lzop squashfs-tools xsltproc pngcrush schedtool zip zlib1g-dev 
 		elif [ "$kind" == "2" ]; then
-			sudo apt-get install bison libc6 build-essential curl flex g++-multilib g++ gcc-multilib git-core gnupg gperf lib32ncurses5-dev lib32readLine-gplv2-dev lib32z1-dev libesd0-dev libncurses5-dev libsdl1.2-dev libwxgtk2.8-dev libxml2 libxml2-utils lzop squashfs-tools xsltproc pngcrush schedtool zip zlib1g-dev	
+			sudo apt-get install bison ccache libc6 build-essential curl flex g++-multilib g++ gcc-multilib git-core gnupg gperf x11proto-core-dev tofrodos libx11-dev:i386 libgl1-mesa-dev libreadline6-dev:i386 libgl1-mesa-glx:i386 lib32ncurses5-dev libncurses5-dev:i386 lib32readLine-gplv2-dev lib32z1-dev libesd0-dev libncurses5-dev libsdl1.2-dev libwxgtk2.8-dev python-markdown libxml2 libxml2-utils lzop squashfs-tools xsltproc pngcrush schedtool zip zlib1g-dev:i386 zlib1g-dev	
+			sudo ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/i386-linux-gnu/libGL.so
 		elif [ "$kind" == "3" ]; then
 			sudo apt-get update
 			echo -e "\n删除自带的openjdk..."
@@ -233,26 +270,26 @@ case $configurechoose in
 		else
 			initSystemConfigure
 		fi
-		echo -e "按回车键继续"
-		read anykey
+		read -p "按回车键继续..."
 	
 	;;
 	4)
 		sudo apt-get update
 		sudo apt-get install android-tools-adb android-tools-fastboot
 		addadbrules
-		echo -e "按回车键继续"
-		read anykey
+		read -p "按回车键继续..."
 	;;
 	5)
-		changecoronlanguage
+		installsdk
 	;;
 	6)
-		addhosts
-		echo -e "按回车键继续"
-		read anykey
+		changecoronlanguage
 	;;
 	7)
+		addhosts
+		read -p "按回车键继续..."
+	;;
+	8)
 		echo -e "\n开始配置32位运行环境..."
 		echo -e "请选择使用的系统版本:"
 		echo -e "\t1. ubuntu 12.04 及以下"
@@ -281,6 +318,8 @@ case $configurechoose in
 		sudo add-apt-repository ppa:webupd8team/java
 		sudo apt-get update && sudo apt-get install oracle-java7-installer
 		sudo apt-get install android-tools-adb android-tools-fastboot
+		echo -e "\n开始安装AndroidSDK环境..."
+		installsdk
 		echo -e "\n开始安装ROM编译环境..."
 		sudo apt-get install bison build-essential curl flex g++-multilib g++ gcc-multilib git-core gnupg gperf lib32ncurses5-dev lib32readLine-gplv2-dev lib32z1-dev libesd0-dev libncurses5-dev libsdl1.2-dev libwxgtk2.8-dev libxml2 libxml2-utils lzop squashfs-tools xsltproc pngcrush schedtool zip zlib1g-dev
 		echo -e "\n配置adb环境变量..."
@@ -291,8 +330,7 @@ case $configurechoose in
 		sudo adb kill-server
 		sudo adb devices
 		echo "\n配置环境完成"
-		echo -e "按回车键继续"
-		read anykey
+		read -p "按回车键继续..."
 	;;
 esac
 }
@@ -323,8 +361,7 @@ clean(){
 	echo -e "正在清理残留文件"
 	rm -rf log
 	rm -rf screenshot.png
-	echo -e "按回车键退出"
-	read anykey
+	read -p "按回车键继续..."
 }
  
 main(){
@@ -334,12 +371,13 @@ echo "--作者：Modificator & 嘉豪仔_Kwan"
 echo -e "			输入命令号码 :\n"
 echo -e "\t\t1. 使用root权限启动adb"
 echo -e "\t\t2. 设置环境变量"
-echo -e "\t\t3. 依然无法识别手机？没关系，选这个"
-echo -e "\t\t4. 同步源码"
-echo -e "\t\t5. 快速同步源码(跳过谷歌认证)"
-echo -e "\t\t6. 伪加密工具"
-echo -e "\t\t7. 抓取log工具"
-echo -e "\t\t8. 手机截图"
+echo -e "\t\t3. 安装安卓厨房（Android-Kitchen)"
+echo -e "\t\t4. 依然无法识别手机？没关系，选这个"
+echo -e "\t\t5. 同步源码"
+echo -e "\t\t6. 快速同步源码(跳过谷歌认证)"
+echo -e "\t\t7. 伪加密工具"
+echo -e "\t\t8. 抓取log工具"
+echo -e "\t\t9. 手机截图"
 echo -e "\t\t0. 离开脚本"
 echo -ne "\n选择:"
 read inp
@@ -347,8 +385,7 @@ case $inp in
 	1)
 		sudo adb kill-server
 		sudo adb devices
-		echo -e "按回车键继续"
-		read anykey
+		read -p "按回车键继续..."
 		main
 	;;
 	2)
@@ -356,34 +393,42 @@ case $inp in
 		main
 	;;
 	3)
-		addRules
+		echo "安装安卓厨房"
+		sudo apt-get install git -y
+		cd ~/
+		git clone https://github.com/kuairom/Android_Kitchen_cn
+		echo "安卓厨房已下载到主文件夹的Android_Kitchen_cn目录里！"
+		read -p "按回车键继续..."
 		main
 	;;
 	4)
-		repoSource
+		addRules
 		main
 	;;
 	5)
-		fastrepoSource
+		repoSource
 		main
 	;;
 	6)
-		zipcenop
+		fastrepoSource
 		main
 	;;
 	7)
-		logcat
+		zipcenop
 		main
 	;;
 	8)
+		logcat
+		main
+	;;
+	9)
 		adb shell /system/bin/screencap -p /data/local/tmp/screenshot.png
 		cd $thisDir
 		adb pull /data/local/tmp/screenshot.png
 		if [ "$?" == "0" ]; then
 		echo -e "截图文件已经输出到$thisDir"
 		fi
-		echo -e "按回车键继续"
-		read anykey
+		read -p "按回车键继续..."
 		main
 	;;
 	0)
@@ -411,4 +456,6 @@ echo -e "正在检测，请稍候......"
 		echo -e "工具已存在，跳过解压......"
 	fi
 sleep 1
+echo -e "说明：本脚本仅适用于Ubuntu及各大Ubuntu发行版使用，并且建议在14.04Lts版本下使用"
+read -p "按回车键继续..."
 main
