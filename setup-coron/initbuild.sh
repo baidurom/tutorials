@@ -4,7 +4,6 @@ clear
 username=`whoami`
 thisDir=`pwd`
 
-
 addRulesFunc(){
 	read mIdVendor mIdProduct
 	echo "SUBSYSTEM==\"usb\", ATTR{idVendor}==\""$mIdVendor"\", ATTR{idProduct}==\""$mIdProduct"\", MODE=\"0600\"" | sudo tee -a /etc/udev/rules.d/51-android.rules
@@ -53,9 +52,8 @@ addRules(){
 
 addadbrules(){
 	echo -e "\n配置adb环境变量..."
-	cp 51-android.rules /etc/udev/rules.d/
-	chmod a+rx /etc/udev/rules.d/51-android.rules
-	source /etc/udev/rules.d/51-android.rules
+	sudo cp 51-android.rules /etc/udev/rules.d/
+	sudo chmod a+rx /etc/udev/rules.d/51-android.rules
 	echo "export PATH=$PATH:~/bin/" | sudo tee -a /etc/profile
 	source /etc/profile
 	sudo adb kill-server
@@ -66,7 +64,7 @@ addadbrules(){
 }
 
 changecoronlanguage(){
-echo -e "请输入coron项目所在目录(可以尝试把目录拖进来,如果失败请手动输入路径)"
+echo -e "请输入coron项目所在目录(可以把目录拖进来,)"
 read coronDir
 echo -e "输入1即可把coron项目环境改成中文"
 echo -e "输入2即可把coron项目环境改回英文"
@@ -95,7 +93,7 @@ esac
 
 zipcenop(){
 	echo -e "这是刷机包或者apk&jar伪加密工具"
-	echo -e "输入你想加密的刷机包或者apk&jar(可以拖进来)"
+	echo -e "请把需要加密的刷机包或者apk&jar拖进来"
 	read cenopfile
 	echo -ne "\n选择:"
 	echo -e "输入1加密，输入2解密，输入任意字符退出"
@@ -103,12 +101,12 @@ zipcenop(){
 	read cenopmode
 case $cenopmode in
 	1)
-		java -jar $thisDir/ZipCenOp.jar r $cenopfile
+		java -jar $thisDir/ZipCenOp.jar e ${cenopfile//\'//}
 	echo -e "按回车键继续"
 	read anykey
 	;;
 	2)
-		java -jar $thisDir/ZipCenOp.jar e $cenopfile
+		java -jar $thisDir/ZipCenOp.jar r ${cenopfile//\'//}
 	echo -e "按回车键继续"
 	read anykey
 	;;
@@ -169,7 +167,7 @@ echo -e "\t3.aosp&cm&recovery编译环境"
 echo -e "\t4.adb运行环境"
 echo -e "\t5.coron项目中文环境"
 echo -e "\t6.hosts环境"
-echo -e "\t7.安卓开发必备环境(上面的1.2.3.4)"
+echo -e "\t7.安卓开发必备环境(上面1234）"
 echo -ne "\n选择:"
 read configurechoose
 case $configurechoose in
@@ -181,15 +179,15 @@ case $configurechoose in
 		echo -en "选择:"
 		read kind
 		if [ "$kind" == "1" ]; then
-			apt-get install ia32-libs
+			sudo apt-get install ia32-libs
 		else
 #start
 		cd /etc/apt/sources.list.d #进入apt源列表
-		echo "deb http://mirrors.oschina.net/ubuntu/ rarin main restricted universe multiverse" > ia32-libs-raring.list 
+		echo "deb http://old-releases.ubuntu.com/ubuntu/ raring main restricted universe multiverse" | sudo tee ia32-libs-raring.list
 #添加ubuntu 13.04的源，因为13.10的后续版本废弃了ia32-libs
 		sudo apt-get update #更新一下源
 		sudo apt-get install ia32-libs #安装ia32-libs
-		rm ia32-libs-raring.list #恢复源
+		sudo rm ia32-libs-raring.list #恢复源
 		sudo apt-get update #再次更新下源
 #end
 		fi
@@ -204,7 +202,7 @@ case $configurechoose in
 		echo -e "\n开始安装oracle java developement kit..."
 		sleep 1
 		sudo add-apt-repository ppa:webupd8team/java
-		sudo apt-get update && sudo apt-get install oracle-java6-installer
+		sudo apt-get update && sudo apt-get install oracle-java7-installer 
 		echo -e "按回车键继续"
 		read anykey
 	;;
@@ -213,16 +211,34 @@ case $configurechoose in
 		echo -e "请选择使用的系统版本:"
 		echo -e "\t1. ubuntu 12.04 及以下"
 		echo -e "\t2. 其他(包括deepin等基于ubuntu 的系统)"
+		echo -e "\t3. javaSE1.6.0"
 		echo -en "选择:"
 		read kind
 		if [ "$kind" == "1" ]; then
 			sudo apt-get install bison libc6 build-essential curl flex g++-multilib g++ gcc-multilib git-core gnupg gperf libesd0-dev libncurses5-dev libwxgtk2.8-dev lzop squashfs-tools xsltproc pngcrush schedtool zip zlib1g-dev 
-		else
+		elif [ "$kind" == "2" ]; then
 			sudo apt-get install bison libc6 build-essential curl flex g++-multilib g++ gcc-multilib git-core gnupg gperf lib32ncurses5-dev lib32readLine-gplv2-dev lib32z1-dev libesd0-dev libncurses5-dev libsdl1.2-dev libwxgtk2.8-dev libxml2 libxml2-utils lzop squashfs-tools xsltproc pngcrush schedtool zip zlib1g-dev	
+		elif [ "$kind" == "3" ]; then
+			sudo apt-get update
+			echo -e "\n删除自带的openjdk..."
+			sleep 1
+			sudo apt-get purge openjdk-* icedtea-* icedtea6-*
+			echo -e "\n开始安装oracle java developement kit..."
+			sleep 1
+			sudo add-apt-repository ppa:webupd8team/java
+			sudo apt-get update && sudo apt-get install oracle-java6-installer 
+			echo "alias java-switch='sudo update-alternatives --config java'" | sudo tee -a /etc/profile
+			source /etc/profile
+			echo -e "你可以使用java-switch命令来切换java版本"
+		else
+			initSystemConfigure
 		fi
+		echo -e "按回车键继续"
 		read anykey
+	
 	;;
 	4)
+		sudo apt-get update
 		sudo apt-get install android-tools-adb android-tools-fastboot
 		addadbrules
 		echo -e "按回车键继续"
@@ -244,15 +260,15 @@ case $configurechoose in
 		echo -en "选择:"
 		read kind
 		if [ $kind -eq 1 ]; then
-			apt-get install ia32-libs
+			sudo apt-get install ia32-libs
 		else
 #start
 		cd /etc/apt/sources.list.d #进入apt源列表
-		echo "deb http://mirrors.oschina.net/ubuntu/ rarin main restricted universe multiverse" > ia32-libs-raring.list 
+		echo "deb http://old-releases.ubuntu.com/ubuntu/ raring main restricted universe multiverse" | sudo tee ia32-libs-raring.list
 #添加ubuntu 13.04的源，因为13.10的后续版本废弃了ia32-libs
 		sudo apt-get update #更新一下源
 		sudo apt-get install ia32-libs #安装ia32-libs
-		rm ia32-libs-raring.list #恢复源
+		sudo rm ia32-libs-raring.list #恢复源
 		sudo apt-get update #再次更新下源
 #end
 		fi
@@ -263,14 +279,13 @@ case $configurechoose in
 		echo -e "\n开始安装oracle java developement kit..."
 		sleep 1
 		sudo add-apt-repository ppa:webupd8team/java
-		sudo apt-get update && sudo apt-get install oracle-java6-installer
+		sudo apt-get update && sudo apt-get install oracle-java7-installer
 		sudo apt-get install android-tools-adb android-tools-fastboot
 		echo -e "\n开始安装ROM编译环境..."
 		sudo apt-get install bison build-essential curl flex g++-multilib g++ gcc-multilib git-core gnupg gperf lib32ncurses5-dev lib32readLine-gplv2-dev lib32z1-dev libesd0-dev libncurses5-dev libsdl1.2-dev libwxgtk2.8-dev libxml2 libxml2-utils lzop squashfs-tools xsltproc pngcrush schedtool zip zlib1g-dev
 		echo -e "\n配置adb环境变量..."
-		cp 51-android.rules /etc/udev/rules.d/
+		sudo cp 51-android.rules /etc/udev/rules.d/
 		sudo chmod a+rx /etc/udev/rules.d/51-android.rules
-		source /etc/udev/rules.d/51-android.rules
 		echo "export PATH=$PATH:~/bin/" | sudo tee -a /etc/profile
 		source /etc/profile
 		sudo adb kill-server
@@ -290,12 +305,12 @@ echo -ne "\n选择:"
 read logcatmode
 case $logcatmode in
 	1)
-		adb logcat > $thisDir/log
+		adb logcat -b main -b system -b radio > $thisDir/log
 	;;
 	2)
 		echo -e "输入你想过滤的内容"
 		read ignoretext
-		adb logcat|grep $ignoretext|tee $thisDir/log
+		adb logcat -b main -b system -b radio |grep $ignoretext|tee $thisDir/log
 	;;
 	*)
 		echo -e "请输入正确的命令"
@@ -314,8 +329,8 @@ clean(){
  
 main(){
 clear 
-echo -e "                 Android Development Shell scirpt"
-echo "          --made by Modificator & Edit by Jay_Kwan"
+echo -e "Android开发环境一键搭载脚本及开发工具"
+echo "--作者：Modificator & 嘉豪仔_Kwan"
 echo -e "			输入命令号码 :\n"
 echo -e "\t\t1. 使用root权限启动adb"
 echo -e "\t\t2. 设置环境变量"
@@ -378,7 +393,7 @@ case $inp in
 		echo -e "输入c清理残留文件否则直接退出"
 		echo -ne "\n输入c清理或者按回车退出:"
 		read cleanchoose
-		if [ "$cleanchoose" -eq "c" ]; then
+		if [ "$cleanchoose" == "c" ]; then
 			clean
 		fi
 		echo -e "\e[0m"
@@ -388,11 +403,12 @@ case $inp in
 	;;
 esac
 }
-echo -e "正在解压工具，请稍候......"
-if [ ! -f repo ]; then 
-	tar -xvf tools.tar
-fi 
-
+echo -e "正在检测，请稍候......"
+	if [ ! -f repo ]; then
+		echo -e "正在解压工具，请稍候......"
+		tar -xvf tools.tar
+	else
+		echo -e "工具已存在，跳过解压......"
+	fi
 sleep 1
 main
-echo -e "\e[0m"
